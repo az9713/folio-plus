@@ -14,6 +14,75 @@ documents. Free and open source, with no Folio account required.
 | --- | --- |
 | ![Color highlights in a document, with their notes in the sidebar](docs/screenshots/highlights-and-notes.png) | ![Searching a document in the dark theme, with every match highlighted and a list of matching pages](docs/screenshots/search.png) |
 
+## About folio-plus
+
+### The new features, in detail
+
+**Page history.** Each open document keeps its own Back/Forward history. A jump is recorded when you go to a different
+page from a search result, the outline, a bookmark, the page-number field, or an Ask AI citation; the page you left is
+what gets saved. Plain previous/next paging and scrolling are not recorded, and a jump to the page you are already on
+is ignored. Use the **Back** and **Forward** buttons beside the sidebar toggle, or `Alt+Left` / `Alt+Right`
+(`⌘Left` / `⌘Right` on macOS). As in a browser, making a new jump clears the Forward list. The Back and Forward lists
+are each capped at 50 entries, so in a very long session the oldest entries are dropped. Repeated visits to the same
+page are not merged. History is held in memory only: it is not saved, and it starts empty when you open a different
+document.
+
+**Notes filter.** The Notes tab has a search box above the highlight list. It matches the highlight's quoted text or
+its note, ignoring case and leading or trailing spaces. Below it are color chips; selecting one or more shows only
+highlights in those colors, and the text and color filters apply together. A line such as "2 of 7 highlights" shows
+how many match, a message appears when none do, and a clear button resets the filter. The filter only changes what the
+panel displays: Markdown and JSON exports always include every highlight. The filter state is not saved between
+sessions.
+
+**Reading progress.** Folio records the furthest page you have reached in each document. It only moves forward, so
+paging back does not lower it, and it is clamped to the document's page count. The Welcome screen's recent cards show
+a thin progress bar and a "% read" figure (shown once you are past page 1). Password-protected PDFs are not kept in
+Recent, so no progress is recorded for them. Recent entries saved before this feature existed have no furthest page and
+fall back to their last page read, so they keep working. This version does not add a progress bar inside the reader
+itself; progress is shown on the recent cards.
+
+**Regression tests.** `npm run test:folio-plus` runs 10 checks against the three pure logic modules
+(`src/pageHistory.ts`, `src/noteFilter.ts`, `src/readingProgress.ts`): history ordering, clearing, bounds and invalid
+input; text, color, and combined note filtering; and furthest-page and fraction math. They do not cover the React UI.
+
+### How this was built
+
+These features and this README section were implemented by Grok Bot, an AI assistant acting as Simon's senior developer
+agent "Devin", using Claude Code (Anthropic's coding CLI). Claude Code ran on Grok Bot's own virtual computer (a Linux
+machine), not on Simon's laptop and not through Cursor cloud agents.
+
+The workflow was:
+
+1. Grok Bot cloned `Forward-Future/folio`, renamed the upstream remote, and disabled its push URL so nothing could be
+   pushed upstream. No pull request was opened.
+2. Claude Code implemented the features in four commits.
+3. Grok Bot independently validated the result with `npx tsc --noEmit`, `npm run build`, `npm run test:folio-plus`, and
+   `npm run smoke`.
+
+The smoke test does not exercise the new UI, so the features were not visually verified in a running app. Treat the
+UI behavior described above as read from the code and covered only by the logic tests.
+
+After Simon approved creating a public repository, it was published to `github.com/az9713/folio-plus` using the GitHub
+CLI on Simon's laptop.
+
+### The original prompt
+
+Simon's original request, verbatim:
+
+> can you download https://github.com/Forward-Future/folio and add some meaningful new features. when you are done, please commit and push to github.com/az9713/folio-plus. clone the repo and do not create any PR upstream.
+
+He later asked that Claude Code be used for this project, not Cursor, and said he wanted to watch it run in the
+terminal.
+
+### How Claude Code was authenticated
+
+Claude Code was installed with npm on the virtual computer. It was signed in with Simon's own Claude subscription plan
+(a claude.ai account login using OAuth) rather than an API key, so usage counts against his Claude plan allowance and
+no per-token API billing applies. The login was started with `claude auth login --claudeai`. Simon opened the sign-in
+link in his own browser, approved access, and pasted back the one-time code, which is single-use. The resulting
+credentials are stored only on the virtual computer, in Claude Code's own configuration, and were never committed to
+this repository. Codex CLI was also installed there but was not signed in and was not used.
+
 ## Download
 
 | Platform | Download | Updates |
