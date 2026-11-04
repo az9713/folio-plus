@@ -10,7 +10,8 @@ import {
 } from "./viewer";
 import { AnnotationEditorParamsType, AnnotationEditorType } from "pdfjs-dist";
 import { loadPdf, reorderPdf, thumbnailDataUrl, type PDFDocumentProxy } from "./pdf";
-import { contentKey, getRecent, MAX_RECENT_FILE_BYTES, removeRecent, saveRecent, updateLastPage } from "./recent";
+import { contentKey, getRecent, MAX_RECENT_FILE_BYTES, removeRecent, saveRecent, updateFurthestPage, updateLastPage } from "./recent";
+import { EMPTY_HISTORY, recordJump, stepBack, stepForward } from "./pageHistory";
 import { readPdfBlob, readPdfResponse } from "./pdfInput";
 import { FIT_SCALES, readView, writeView, type ReadingView } from "./session";
 import { DocumentTabBar } from "./DocumentTabBar";
@@ -29,7 +30,7 @@ import { imageRegions, trackPageImages } from "./nightImages";
 import { recognizeScannedPages } from "./pageOcr";
 import { ImageMenu, ImageViewer, type ImageTarget } from "./ImageViewer";
 import { MoreMenu, type MoreItem } from "./MoreMenu";
-import { keys } from "./platform";
+import { isMac, keys } from "./platform";
 import { AiPanel, type AiContext } from "./AiPanel";
 import { ZoomMenu } from "./ZoomMenu";
 import { SearchBar, type FindResult } from "./SearchBar";
@@ -179,6 +180,8 @@ export default function App({ tabs, tabKey }: { tabs: DocumentTabs; tabKey: numb
   const colorsRef = useRef(colors);
   colorsRef.current = colors;
   const pageRef = useRef(1);
+  const historyRef = useRef(EMPTY_HISTORY);
+  const [historyNav, setHistoryNav] = useState({ canBack: false, canForward: false });
   const [dirty, setDirty] = useState(false);
   const [contentEditing, setContentEditing] = useState(false);
   const contentRef = useRef<ContentEditorHandle>(null);
@@ -551,7 +554,11 @@ export default function App({ tabs, tabKey }: { tabs: DocumentTabs; tabKey: numb
   }, [doc, sidebar, spread]);
   useEffect(() => {
     if (!doc) return;
-    const timer = window.setTimeout(() => void updateLastPage(doc.id, page), 600);
+    const timer = window.setTimeout(() => {
+      void updateLastPage(doc.id, page);
+      // Not recorded for password-protected PDFs: they aren't kept in Recent at all, matching existing privacy behavior.
+      if (!doc.password) void updateFurthestPage(doc.id, page);
+    }, 600);
     return () => window.clearTimeout(timer);
   }, [doc, page]);
 
@@ -561,6 +568,36 @@ export default function App({ tabs, tabKey }: { tabs: DocumentTabs; tabKey: numb
     if (!v.pdfDocument) return;
     v.currentPageNumber = Math.min(Math.max(1, n), v.pagesCount);
   }, []);
+
+  // Page history: Back/Forward retrace citation, outline, search, bookmark, and page-field jumps (not
+  // plain previous/next paging). A new document starts with empty history.
+  useEffect(() => {
+    historyRef.current = EMPTY_HISTORY;
+    setHistoryNav({ canBack: false, canForward: false });
+  }, [doc?.id]);
+  const beginJump = useCallback(() => {
+    historyRef.current = recordJump(historyRef.current, pageRef.current);
+    setHistoryNav({ canBack: true, canForward: false });
+  }, []);
+  const jumpTo = useCallback((n: number) => {
+    if (n !== pageRef.current) beginJump();
+    goTo(n);
+  }, [goTo, beginJump]);
+  const historyBack = useCallback(() => {
+    const result = stepBack(historyRef.current, pageRef.current);
+    if (!result) return;
+    historyRef.current = result.state;
+    setHistoryNav({ canBack: result.state.back.length > 0, canForward: result.state.forward.length > 0 });
+    goTo(result.page);
+  }, [goTo]);
+  const historyForward = useCallback(() => {
+    const result = stepForward(historyRef.current, pageRef.current);
+    if (!result) return;
+    historyRef.current = result.state;
+    setHistoryNav({ canBack: result.state.back.length > 0, canForward: result.state.forward.length > 0 });
+    goTo(result.page);
+  }, [goTo]);
+
   const zoom = (steps: number) => {
     const v = viewerRef.current!;
     if (v.pdfDocument) v.updateScale({ steps, drawingDelay: 150, origin: undefined as unknown as number[] });
@@ -1000,6 +1037,8 @@ export default function App({ tabs, tabKey }: { tabs: DocumentTabs; tabKey: numb
     const onKey = (e: KeyboardEvent) => {
       if (tabs.active !== tabKey) return;
       const mod = e.ctrlKey || e.metaKey;
+      // Page history uses ⌘Left/⌘Right on macOS (Option+Left/Right is already word navigation) and Alt+Left/Right elsewhere.
+      const historyMod = isMac ? e.metaKey : e.altKey;
       if (mod && !e.altKey && !e.shiftKey && e.key.toLowerCase() === "t") {
         e.preventDefault(); tabs.library(); return;
       }
@@ -1052,6 +1091,9 @@ export default function App({ tabs, tabKey }: { tabs: DocumentTabs; tabKey: numb
       } else if (mod && e.key === "\\") {
         e.preventDefault();
         setSidebar((s) => !s);
+      } else if (historyMod && !typing && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+        e.preventDefault();
+        if (e.key === "ArrowLeft") historyBack(); else historyForward();
       } else if (typing || mod || e.altKey) {
         return;
       } else if (selection && tool === "select" && /^h$/i.test(e.key)) {
@@ -1194,6 +1236,10 @@ export default function App({ tabs, tabKey }: { tabs: DocumentTabs; tabKey: numb
           {doc && (
             <>
               <IconButton icon="sidebar" label={keys("Toggle sidebar (Ctrl+\\)")} active={sidebar} onClick={() => setSidebar(!sidebar)} />
+              <div className="history-nav">
+                <IconButton icon="chevronLeft" label={keys("Back (Alt+Left)")} onClick={historyBack} disabled={!historyNav.canBack} />
+                <IconButton icon="chevronRight" label={keys("Forward (Alt+Right)")} onClick={historyForward} disabled={!historyNav.canForward} />
+              </div>
               {!multipleTabs && <div className="doc-title" title={doc.name}>
                 <span>{doc.name}</span>
                 {unsaved && <span className="dirty-dot" role="img" aria-label="Unsaved changes" title="Unsaved changes" />}
@@ -1269,7 +1315,7 @@ export default function App({ tabs, tabKey }: { tabs: DocumentTabs; tabKey: numb
             pdf={doc.pdf}
             page={page}
             rotation={rotation}
-            onSelectPage={goTo}
+            onSelectPage={pageDraft ? goTo : jumpTo}
             bookmarkedPages={markup.bookmarkedPages}
             onToggleBookmark={n => markupRef.current!.toggleBookmark(n)}
             order={pageDraft?.order ?? null}
@@ -1278,13 +1324,14 @@ export default function App({ tabs, tabKey }: { tabs: DocumentTabs; tabKey: numb
             onOpenCopy={pageDraft?.copy ? () => {
               tabs.open([{ kind: "bytes", name: copyName, data: pageDraft.copy!, password: doc.password }]);
             } : undefined}
-            onSelectDest={(dest) => linkRef.current!.goToDestination(dest as string)}
+            onSelectDest={(dest) => { beginJump(); linkRef.current!.goToDestination(dest as string); }}
             tab={sidebarTab}
             onTab={setSidebarTab}
             noteCount={markup.marks.filter((m) => m.type === "highlight").length}
             notes={
               <NotesPanel
                 state={markup}
+                colors={HIGHLIGHTS}
                 onExport={exportNotes}
                 persisted={persistRef.current}
                 onReveal={(id) => markupRef.current!.reveal(id)}
@@ -1319,7 +1366,7 @@ export default function App({ tabs, tabKey }: { tabs: DocumentTabs; tabKey: numb
           {doc && searchOpen && (
             <>
               <SearchBar result={find} onFind={runFind} onClose={closeSearch} />
-              <SearchResults pdf={doc.pdf} controller={findRef.current!} bus={busRef.current!} onSelect={goTo} />
+              <SearchResults pdf={doc.pdf} controller={findRef.current!} bus={busRef.current!} onSelect={jumpTo} />
             </>
           )}
 
@@ -1362,7 +1409,7 @@ export default function App({ tabs, tabKey }: { tabs: DocumentTabs; tabKey: numb
                 onSubmit={(e) => {
                   e.preventDefault();
                   const n = parseInt(pageInput, 10);
-                  if (Number.isFinite(n)) goTo(n);
+                  if (Number.isFinite(n)) jumpTo(n);
                   else setPageInput(String(page));
                   (document.activeElement as HTMLElement)?.blur();
                 }}
@@ -1469,7 +1516,7 @@ export default function App({ tabs, tabKey }: { tabs: DocumentTabs; tabKey: numb
             docName={doc.name}
             context={aiContext}
             onClearContext={() => setAiContext(null)}
-            onGoToPage={goTo}
+            onGoToPage={jumpTo}
             onClose={() => setAiOpen(false)}
           />
         )}
@@ -1551,9 +1598,9 @@ export default function App({ tabs, tabKey }: { tabs: DocumentTabs; tabKey: numb
   );
 }
 
-function IconButton({ icon, label, onClick, active }: { icon: IconName; label: string; onClick: () => void; active?: boolean }) {
+function IconButton({ icon, label, onClick, active, disabled }: { icon: IconName; label: string; onClick: () => void; active?: boolean; disabled?: boolean }) {
   return (
-    <button className={`icon-btn ${active ? "on" : ""}`} onClick={onClick} title={label} aria-label={label} aria-pressed={active}>
+    <button className={`icon-btn ${active ? "on" : ""}`} onClick={onClick} title={label} aria-label={label} aria-pressed={active} disabled={disabled}>
       <Icon name={icon} />
     </button>
   );
