@@ -134,6 +134,7 @@ const SHORTCUTS: [string, string][] = [
   ["Zoom in / out", "Ctrl + / −"],
   ["Reset zoom", "Ctrl 0"],
   ["Toggle sidebar", "Ctrl \\"],
+  ["Back / forward through page history", "Alt Left / Alt Right"],
   ["Select tool", "V"],
   ["Draw", "D"],
   ["Add text", "T"],

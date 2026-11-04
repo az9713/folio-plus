@@ -198,6 +198,11 @@ kbd {
 .topbar-right {
   justify-content: flex-end;
 }
+.history-nav {
+  display: flex;
+  gap: 0;
+  flex: none;
+}
 
 .brand {
   display: flex;

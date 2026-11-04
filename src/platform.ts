@@ -8,7 +8,12 @@ const platform =
 
 const IS_MAC = platform === "darwin";
 
-/** Writes a shortcut the way this platform does: "Ctrl S" stays on Windows/Linux, becomes "⌘ S" on macOS. */
+/** Whether Folio is running on macOS, for the few shortcuts whose key (not just its label) differs there. */
+export const isMac = IS_MAC;
+
+/** Writes a shortcut the way this platform does: "Ctrl S" stays on Windows/Linux, becomes "⌘ S" on macOS.
+ * "Alt" becomes "⌘" too, for the Back/Forward page history shortcut, which uses ⌘Left/⌘Right on macOS
+ * (Option+Left/Right is already taken by word navigation) and Alt+Left/Right elsewhere. */
 export function keys(label: string) {
-  return IS_MAC ? label.replace(/Ctrl\+/g, "⌘").replace(/Ctrl/g, "⌘").replace(/Shift/g, "⇧") : label;
+  return IS_MAC ? label.replace(/Ctrl\+/g, "⌘").replace(/Ctrl/g, "⌘").replace(/Alt\+/g, "⌘").replace(/Alt/g, "⌘").replace(/Shift/g, "⇧") : label;
 }

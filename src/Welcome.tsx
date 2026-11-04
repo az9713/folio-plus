@@ -4,6 +4,7 @@ import { Icon } from "./icons";
 import { keys } from "./platform";
 import { formatBytes } from "./Dialogs";
 import { updateSummary } from "./updates";
+import { progressFraction } from "./readingProgress";
 
 function timeAgo(t: number) {
   const s = (Date.now() - t) / 1000;
@@ -132,18 +133,23 @@ export function Welcome({ active, onPick, onOpenUrl, onOpenRecent, onSample, loa
               </button>
             </div>
             <div className="recent-grid">
-              {recent.map((f) => (
+              {recent.map((f) => {
+                // Records saved before reading progress was tracked fall back to the last page read.
+                const furthest = f.furthestPage ?? f.lastPage;
+                const read = progressFraction(furthest, f.pages);
+                return (
                 <div key={f.id} className="recent-card" onClick={() => onOpenRecent(f)} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && onOpenRecent(f)}>
                   <div className="recent-thumb">
                     {f.thumb ? <img src={f.thumb} alt="" /> : <Icon name="file" size={28} />}
-                    {f.lastPage > 1 && (
-                      <span className="recent-progress" style={{ width: `${(f.lastPage / f.pages) * 100}%` }} />
+                    {furthest > 1 && (
+                      <span className="recent-progress" style={{ width: `${read * 100}%` }} />
                     )}
                   </div>
                   <div className="recent-meta">
                     <strong title={f.name}>{f.name.replace(/\.pdf$/i, "")}</strong>
                     <span>
                       {timeAgo(f.openedAt)} · {f.pages} {f.pages === 1 ? "page" : "pages"} · {formatBytes(f.size)}
+                      {furthest > 1 && <> · {Math.round(read * 100)}% read</>}
                     </span>
                   </div>
                   <button
@@ -157,7 +163,8 @@ export function Welcome({ active, onPick, onOpenUrl, onOpenRecent, onSample, loa
                     <Icon name="close" size={13} />
                   </button>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         )}

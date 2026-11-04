@@ -1,11 +1,13 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "./icons";
 import { keys } from "./platform";
 import { MoreMenu } from "./MoreMenu";
 import type { Mark, MarkupState } from "./markup";
+import { filterNotes } from "./noteFilter";
 
 interface Props {
   state: MarkupState;
+  colors: { name: string; hex: string }[];
   onExport: (format: "markdown" | "json") => void;
   persisted: boolean;
   onReveal: (id: string) => void;
@@ -53,10 +55,16 @@ function GrowingTextarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement
   return <textarea ref={ref} {...props} onInput={autoGrow} />;
 }
 
-export function NotesPanel({ state, onExport, persisted, onReveal, onNote, onRemove, onDocNote, onAsk }: Props) {
+export function NotesPanel({ state, colors, onExport, persisted, onReveal, onNote, onRemove, onDocNote, onAsk }: Props) {
   const docNote = useDebouncedField(state.note, onDocNote);
   const highlights = state.marks.filter((m) => m.type === "highlight" || (m.type === "freetext" && m.text));
   const other = state.marks.length - highlights.length;
+  const [query, setQuery] = useState("");
+  const [activeColors, setActiveColors] = useState<string[]>([]);
+  const filtered = useMemo(() => filterNotes(highlights, query, activeColors), [highlights, query, activeColors]);
+  const filtering = query.trim() !== "" || activeColors.length > 0;
+  const toggleColor = (hex: string) =>
+    setActiveColors((prev) => (prev.includes(hex) ? prev.filter((c) => c !== hex) : [...prev, hex]));
 
   return (
     <div className="notes-panel">
@@ -77,14 +85,55 @@ export function NotesPanel({ state, onExport, persisted, onReveal, onNote, onRem
         {...docNote}
       />
 
+      {highlights.length > 0 && (
+        <div className="notes-filter">
+          <div className="notes-search-row">
+            <Icon name="search" size={14} />
+            <input
+              type="search"
+              className="notes-search"
+              placeholder="Search highlights and notes…"
+              aria-label="Search highlights and notes"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+          <div className="notes-filter-colors" role="group" aria-label="Filter by highlight color">
+            {colors.map((c) => (
+              <button
+                key={c.hex}
+                type="button"
+                className={`color-chip ${activeColors.includes(c.hex) ? "on" : ""}`}
+                style={{ "--swatch": c.hex } as React.CSSProperties}
+                aria-pressed={activeColors.includes(c.hex)}
+                aria-label={`Filter ${c.name} highlights`}
+                title={`Filter ${c.name} highlights`}
+                onClick={() => toggleColor(c.hex)}
+              />
+            ))}
+            {filtering && (
+              <button type="button" className="link small notes-filter-clear" onClick={() => { setQuery(""); setActiveColors([]); }}>
+                Clear
+              </button>
+            )}
+          </div>
+          <p className="notes-filter-count">{filtered.length} of {highlights.length} highlight{highlights.length === 1 ? "" : "s"}</p>
+        </div>
+      )}
+
       {highlights.length === 0 ? (
         <div className="notes-empty">
           <Icon name="highlight" size={22} />
           <p>Select text and click a color to highlight it. Highlights and their notes show up here.</p>
         </div>
+      ) : filtered.length === 0 ? (
+        <div className="notes-empty" role="status">
+          <Icon name="search" size={22} />
+          <p>No highlights match your search.</p>
+        </div>
       ) : (
         <ul className="mark-list">
-          {highlights.map((mark) => (
+          {filtered.map((mark) => (
             <MarkCard key={mark.id} mark={mark} onReveal={onReveal} onNote={onNote} onRemove={onRemove} onAsk={onAsk} />
           ))}
         </ul>

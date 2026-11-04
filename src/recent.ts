@@ -1,4 +1,5 @@
 // Recently opened files, kept locally in IndexedDB so they can be reopened with one click.
+import { furthestPage } from "./readingProgress";
 
 export interface RecentFile {
   id: string;
@@ -7,6 +8,8 @@ export interface RecentFile {
   pages: number;
   openedAt: number;
   lastPage: number;
+  /** Furthest page reached while reading this document; absent in records saved before this field existed. */
+  furthestPage?: number;
   thumb: string;
   data: Blob;
 }
@@ -143,6 +146,26 @@ export async function updateLastPage(id: string, lastPage: number) {
       request.onsuccess = () => {
         const file = request.result as RecentFile | undefined;
         if (file && file.lastPage !== lastPage) store.put({ ...file, lastPage });
+      };
+      transaction.oncomplete = () => resolve();
+      transaction.onabort = () => reject(transaction.error);
+    });
+  } catch {}
+}
+
+/** Records the furthest page reached, for the progress bar on the recent-library card. Never moves it backwards. */
+export async function updateFurthestPage(id: string, page: number) {
+  try {
+    const database = await openFolioDatabase();
+    await new Promise<void>((resolve, reject) => {
+      const transaction = database.transaction(STORE, "readwrite");
+      const store = transaction.objectStore(STORE);
+      const request = store.get(id);
+      request.onsuccess = () => {
+        const file = request.result as RecentFile | undefined;
+        if (!file) return;
+        const next = furthestPage(file.furthestPage, page, file.pages);
+        if (next !== file.furthestPage) store.put({ ...file, furthestPage: next });
       };
       transaction.oncomplete = () => resolve();
       transaction.onabort = () => reject(transaction.error);
