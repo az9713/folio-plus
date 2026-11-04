@@ -1,5 +1,10 @@
 # Folio
 
+> **folio-plus** is a fork of [Folio](https://github.com/Forward-Future/folio) that adds page history navigation
+> (Back/Forward), a search box and color filters in the Notes tab, and per-document reading progress. These are
+> covered in [Features](#features) and the [keyboard shortcuts](#keyboard-shortcuts) table below; everything else
+> in this README describes upstream Folio.
+
 A fast, clean PDF reader for Windows, macOS, and Linux. Read, highlight, annotate, sign, and ask AI about your
 documents. Free and open source, with no Folio account required.
 
@@ -64,6 +69,10 @@ URL opening, webpage conversion, and Word conversion require the desktop app. Fa
 
 - **Continuous scrolling** with selectable text, previous/next controls, and a page-number field for jumping directly
   to a page. Enable **Settings → Reading → Scroll one page at a time** to turn pages with the mouse wheel.
+- **Page history (folio-plus):** jumping to a page from a search result, the outline, a bookmark, the page-number
+  field, or an Ask AI citation is remembered. Use the **Back** / **Forward** buttons beside the sidebar toggle, or
+  `Alt+Left` / `Alt+Right` (`⌘Left` / `⌘Right` on macOS), to retrace those jumps. Plain previous/next paging isn't
+  recorded. History is per document and per tab, and starts over when you open a different document.
 - **Pages and Outline tabs:** browse page thumbnails or the PDF's existing outline/bookmarks; hide the sidebar when
   you want more reading space.
 - **Personal bookmarks:** click the ribbon beside a page number in **Pages** to save or remove a bookmark without
@@ -111,6 +120,9 @@ The editor works with unsigned, unencrypted PDFs.
   drawing/text tool and return to selection.
 - **Notes tab:** review highlights, their notes, and text boxes; click an entry to jump to it, edit a highlight's note,
   delete an entry, or ask AI about a highlight. A separate notes box holds thoughts about the whole document.
+- **Filter notes (folio-plus):** search box above the highlight list matches a highlight's quote or note; color chips
+  narrow it to one or more highlight colors. A count shows how many of the document's highlights match, and a message
+  appears when none do. Exporting Markdown or JSON always includes every highlight, regardless of the filter.
 - **Export reading notes:** in **Notes → Export**, copy Markdown or save a JSON file. JSON includes your notes,
   highlights, text boxes, drawings and shapes with one-based page numbers, plus the PDF's outline bookmarks.
   It includes stable annotation IDs, colors, and coordinates in unrotated PDF user space for use in other tools.
@@ -164,6 +176,9 @@ Ask AI is optional and desktop-only. See [Using Ask AI](#using-ask-ai) for setup
 
 - **Recent library:** keep up to eight recently opened PDFs with thumbnail previews and the last page read; reopen
   with one click, remove individual entries, or choose **Clear all**.
+- **Reading progress (folio-plus):** each recent card shows a thin progress bar and a "% read" figure based on the
+  furthest page you've reached in that document, which only ever moves forward (paging back doesn't lower it).
+  Not recorded for password-protected PDFs, matching Folio's existing privacy behavior for that data.
 - **Startup restore:** reopen the last active document automatically when it is still in the recent library.
 - **Reading state:** remember each document's page, scroll position, zoom, rotation, sidebar visibility, and two-page
   mode.
@@ -211,6 +226,7 @@ On macOS, use `⌘` wherever this table says `Ctrl`. Press `?` with a document o
 | Save a copy / print | `Ctrl+S` / `Ctrl+P` |
 | Zoom in / zoom out / reset zoom | `Ctrl++` / `Ctrl+-` / `Ctrl+0` |
 | Toggle sidebar | `Ctrl+\` |
+| Back / forward through page history (folio-plus) | `Alt+Left` / `Alt+Right` (`⌘Left` / `⌘Right` on macOS) |
 | Rotate / toggle two-page view | `R` / `2` |
 | First page / last page | `Home` / `End` |
 | Focus mode / leave focus or current tool | `F` / `Esc` |
