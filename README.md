@@ -1,6 +1,6 @@
 # Folio
 
-> **folio-plus** is a fork of [Folio](https://github.com/Forward-Future/folio) that adds page history navigation
+> **grokbot-using-claude-demo** (originally named folio-plus) is a fork of [Folio](https://github.com/Forward-Future/folio) that adds page history navigation
 > (Back/Forward), a search box and color filters in the Notes tab, and per-document reading progress. These are
 > covered in [Features](#features) and the [keyboard shortcuts](#keyboard-shortcuts) table below; everything else
 > in this README describes upstream Folio.
@@ -14,7 +14,7 @@ documents. Free and open source, with no Folio account required.
 | --- | --- |
 | ![Color highlights in a document, with their notes in the sidebar](docs/screenshots/highlights-and-notes.png) | ![Searching a document in the dark theme, with every match highlighted and a list of matching pages](docs/screenshots/search.png) |
 
-## About folio-plus
+## About grokbot-using-claude-demo
 
 ### The new features, in detail
 
@@ -62,14 +62,17 @@ The workflow was:
 The smoke test does not exercise the new UI, so the features were not visually verified in a running app. Treat the
 UI behavior described above as read from the code and covered only by the logic tests.
 
-After the user approved creating a public repository, it was published to `github.com/az9713/folio-plus` using the GitHub
+After the user approved creating a public repository, it was published to `github.com/az9713/grokbot-using-claude-demo` (first created as `folio-plus`, renamed later) using the GitHub
 CLI on the user's laptop.
 
 ### Inspiration
 
-The idea of asking Grok Bot to drive Claude Code on its own virtual computer came from the YouTube video
-[Grok Bot usage just got nuked...](https://www.youtube.com/watch?v=V7dsUn8xh6Y) by Alex Finn. This project is an
-experiment in trying that approach.
+The idea of asking Grok Bot to drive Claude Code on its own virtual computer came from two YouTube videos:
+
+- [Grok Bot usage just got nuked...](https://www.youtube.com/watch?v=V7dsUn8xh6Y) by Alex Finn
+- [They did it...](https://www.youtube.com/watch?v=r0cJOa9MZsE) by Matthew Berman
+
+This project is an experiment in trying that approach.
 
 ### The original prompt
 
@@ -78,7 +81,8 @@ The user's original request, verbatim:
 > can you download https://github.com/Forward-Future/folio and add some meaningful new features. when you are done, please commit and push to github.com/az9713/folio-plus. clone the repo and do not create any PR upstream.
 
 They later asked that Claude Code be used for this project, not Cursor, and said they wanted to watch it run in the
-terminal.
+terminal. The repository was later renamed from `folio-plus` to `grokbot-using-claude-demo` at their request; the
+`test:folio-plus` script name is unchanged so existing commands keep working.
 
 ### How Claude Code was authenticated
 
@@ -144,7 +148,7 @@ URL opening, webpage conversion, and Word conversion require the desktop app. Fa
 
 - **Continuous scrolling** with selectable text, previous/next controls, and a page-number field for jumping directly
   to a page. Enable **Settings → Reading → Scroll one page at a time** to turn pages with the mouse wheel.
-- **Page history (folio-plus):** jumping to a page from a search result, the outline, a bookmark, the page-number
+- **Page history (this fork):** jumping to a page from a search result, the outline, a bookmark, the page-number
   field, or an Ask AI citation is remembered. Use the **Back** / **Forward** buttons beside the sidebar toggle, or
   `Alt+Left` / `Alt+Right` (`⌘Left` / `⌘Right` on macOS), to retrace those jumps. Plain previous/next paging isn't
   recorded. History is per document and per tab, and starts over when you open a different document.
@@ -195,7 +199,7 @@ The editor works with unsigned, unencrypted PDFs.
   drawing/text tool and return to selection.
 - **Notes tab:** review highlights, their notes, and text boxes; click an entry to jump to it, edit a highlight's note,
   delete an entry, or ask AI about a highlight. A separate notes box holds thoughts about the whole document.
-- **Filter notes (folio-plus):** search box above the highlight list matches a highlight's quote or note; color chips
+- **Filter notes (this fork):** search box above the highlight list matches a highlight's quote or note; color chips
   narrow it to one or more highlight colors. A count shows how many of the document's highlights match, and a message
   appears when none do. Exporting Markdown or JSON always includes every highlight, regardless of the filter.
 - **Export reading notes:** in **Notes → Export**, copy Markdown or save a JSON file. JSON includes your notes,
@@ -251,7 +255,7 @@ Ask AI is optional and desktop-only. See [Using Ask AI](#using-ask-ai) for setup
 
 - **Recent library:** keep up to eight recently opened PDFs with thumbnail previews and the last page read; reopen
   with one click, remove individual entries, or choose **Clear all**.
-- **Reading progress (folio-plus):** each recent card shows a thin progress bar and a "% read" figure based on the
+- **Reading progress (this fork):** each recent card shows a thin progress bar and a "% read" figure based on the
   furthest page you've reached in that document, which only ever moves forward (paging back doesn't lower it).
   Not recorded for password-protected PDFs, matching Folio's existing privacy behavior for that data.
 - **Startup restore:** reopen the last active document automatically when it is still in the recent library.
@@ -301,7 +305,7 @@ On macOS, use `⌘` wherever this table says `Ctrl`. Press `?` with a document o
 | Save a copy / print | `Ctrl+S` / `Ctrl+P` |
 | Zoom in / zoom out / reset zoom | `Ctrl++` / `Ctrl+-` / `Ctrl+0` |
 | Toggle sidebar | `Ctrl+\` |
-| Back / forward through page history (folio-plus) | `Alt+Left` / `Alt+Right` (`⌘Left` / `⌘Right` on macOS) |
+| Back / forward through page history (this fork) | `Alt+Left` / `Alt+Right` (`⌘Left` / `⌘Right` on macOS) |
 | Rotate / toggle two-page view | `R` / `2` |
 | First page / last page | `Home` / `End` |
 | Focus mode / leave focus or current tool | `F` / `Esc` |
