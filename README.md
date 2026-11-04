@@ -47,9 +47,9 @@ input; text, color, and combined note filtering; and furthest-page and fraction 
 
 ### How this was built
 
-These features and this README section were implemented by Grok Bot, an AI assistant acting as Simon's senior developer
+These features and this README section were implemented by Grok Bot, an AI assistant acting as the user's senior developer
 agent "Devin", using Claude Code (Anthropic's coding CLI). Claude Code ran on Grok Bot's own virtual computer (a Linux
-machine), not on Simon's laptop and not through Cursor cloud agents.
+machine), not on the user's laptop and not through Cursor cloud agents.
 
 The workflow was:
 
@@ -62,24 +62,24 @@ The workflow was:
 The smoke test does not exercise the new UI, so the features were not visually verified in a running app. Treat the
 UI behavior described above as read from the code and covered only by the logic tests.
 
-After Simon approved creating a public repository, it was published to `github.com/az9713/folio-plus` using the GitHub
-CLI on Simon's laptop.
+After the user approved creating a public repository, it was published to `github.com/az9713/folio-plus` using the GitHub
+CLI on the user's laptop.
 
 ### The original prompt
 
-Simon's original request, verbatim:
+The user's original request, verbatim:
 
 > can you download https://github.com/Forward-Future/folio and add some meaningful new features. when you are done, please commit and push to github.com/az9713/folio-plus. clone the repo and do not create any PR upstream.
 
-He later asked that Claude Code be used for this project, not Cursor, and said he wanted to watch it run in the
+They later asked that Claude Code be used for this project, not Cursor, and said they wanted to watch it run in the
 terminal.
 
 ### How Claude Code was authenticated
 
-Claude Code was installed with npm on the virtual computer. It was signed in with Simon's own Claude subscription plan
-(a claude.ai account login using OAuth) rather than an API key, so usage counts against his Claude plan allowance and
-no per-token API billing applies. The login was started with `claude auth login --claudeai`. Simon opened the sign-in
-link in his own browser, approved access, and pasted back the one-time code, which is single-use. The resulting
+Claude Code was installed with npm on the virtual computer. It was signed in with the user's own Claude subscription plan
+(a claude.ai account login using OAuth) rather than an API key, so usage counts against the user's Claude plan allowance and
+no per-token API billing applies. The login was started with `claude auth login --claudeai`. The user opened the sign-in
+link in their own browser, approved access, and pasted back the one-time code, which is single-use. The resulting
 credentials are stored only on the virtual computer, in Claude Code's own configuration, and were never committed to
 this repository. Codex CLI was also installed there but was not signed in and was not used.
 
