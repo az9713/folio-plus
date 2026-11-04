@@ -65,6 +65,12 @@ UI behavior described above as read from the code and covered only by the logic 
 After the user approved creating a public repository, it was published to `github.com/az9713/folio-plus` using the GitHub
 CLI on the user's laptop.
 
+### Inspiration
+
+The idea of asking Grok Bot to drive Claude Code on its own virtual computer came from the YouTube video
+[Grok Bot usage just got nuked...](https://www.youtube.com/watch?v=V7dsUn8xh6Y) by Alex Finn. This project is an
+experiment in trying that approach.
+
 ### The original prompt
 
 The user's original request, verbatim:
